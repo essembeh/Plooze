@@ -39,25 +39,29 @@ public class Launcher {
 					if (options.getDownloadFolder().isPresent()) {
 						String filename = StringUtils.defaultIfBlank(episode.getTitle2(), episode.getId());
 						Path output = Paths.get(options.getDownloadFolder().get().toString(), episode.getTitle(), filename + PloozeConstants.EXTENSION);
-						if (!Files.isDirectory(output.getParent())) {
-							Files.createDirectories(output.getParent());
+						if (!Files.exists(output) || options.overwrite()) {
+							if (!Files.isDirectory(output.getParent())) {
+								Files.createDirectories(output.getParent());
+							}
+							System.out.println("Start downloading: " + output.toString());
+							episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(output, new IDownloadCallback() {
+								@Override
+								public void partStart(int index, int total, String url) {
+								}
+
+								@Override
+								public void partDone(int index, int total, long koSec) {
+									System.out.print(String.format("%d/%d (%d ko/sec)\r", index + 1, total, koSec));
+								}
+
+								@Override
+								public void done() {
+									System.out.println("");
+								}
+							});
+						} else {
+							System.out.println("File already exist: " + output);
 						}
-						System.out.println("Start downloading: " + output.toString());
-						episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(output, new IDownloadCallback() {
-							@Override
-							public void partStart(int index, int total, String url) {
-							}
-
-							@Override
-							public void partDone(int index, int total, long koSec) {
-								System.out.print(String.format("%d/%d (%d ko/sec)\r", index + 1, total, koSec));
-							}
-
-							@Override
-							public void done() {
-								System.out.println("");
-							}
-						});
 					} else {
 						display(episode, options.displayDescription());
 					}

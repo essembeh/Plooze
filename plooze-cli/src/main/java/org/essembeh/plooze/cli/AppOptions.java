@@ -20,6 +20,7 @@ public class AppOptions {
 	public static final String HELP = "h";
 	public static final String UPDATE = "u";
 	public static final String DOWNLOAD = "d";
+	public static final String OVERWRITE = "o";
 	public static final String DESCRIPTION = "v";
 
 	private static final Options OPTIONS = new Options();
@@ -28,6 +29,7 @@ public class AppOptions {
 		OPTIONS.addOption(UPDATE, "update", false, "Download latest content");
 		OPTIONS.addOption(DOWNLOAD, "download", true, "Download episodes to output folder");
 		OPTIONS.addOption(DESCRIPTION, "description", false, "Display episode description");
+		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite file if they already exist");
 	}
 
 	public static AppOptions parse(String... args) throws ParseException {
@@ -72,5 +74,9 @@ public class AppOptions {
 
 	public boolean displayDescription() {
 		return commandLine.hasOption(DESCRIPTION);
+	}
+
+	public boolean overwrite() {
+		return commandLine.hasOption(OVERWRITE);
 	}
 }
