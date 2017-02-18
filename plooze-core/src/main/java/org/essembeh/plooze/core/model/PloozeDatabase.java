@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
@@ -15,18 +16,17 @@ public class PloozeDatabase {
 
 	private final static String[] FIELDS = { "titre", "sous_titre" };
 
-	public static PloozeDatabase read(Path zipFile) throws ZipException, IOException {
-		try (ZipFile zf = new ZipFile(zipFile.toFile())) {
-			PloozeDatabase out = new PloozeDatabase();
-			out.episodes.addAll(PloozeUtils.readZip(zf));
-			return out;
-		}
-	}
-
 	private final List<Episode> episodes = new ArrayList<>();
 
 	public List<Episode> getEpisodes() {
 		return Collections.unmodifiableList(episodes);
+	}
+
+	public void refresh(Path zipFile) throws ZipException, IOException {
+		episodes.clear();
+		try (ZipFile zf = new ZipFile(zipFile.toFile())) {
+			episodes.addAll(PloozeUtils.readZip(zf));
+		}
 	}
 
 	public List<Episode> search(String arg) {
@@ -42,4 +42,7 @@ public class PloozeDatabase {
 		return out;
 	}
 
+	public Optional<Episode> findById(String id) {
+		return getEpisodes().stream().filter(ep -> ep.getId().equals(id)).findFirst();
+	}
 }

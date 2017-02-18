@@ -1,6 +1,7 @@
 package org.essembeh.plooze.cli;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,7 +29,8 @@ public class Launcher {
 				System.out.println("Update zip file: " + ZIP_FILE);
 				PloozeUtils.downloadZipFile(ZIP_FILE);
 			}
-			PloozeDatabase database = PloozeDatabase.read(ZIP_FILE);
+			PloozeDatabase database = new PloozeDatabase();
+			database.refresh(ZIP_FILE);
 			System.out.println("Found " + database.getEpisodes().size() + " episodes");
 
 			for (String arg : options.getArgs()) {
@@ -44,21 +46,23 @@ public class Launcher {
 								Files.createDirectories(output.getParent());
 							}
 							System.out.println("Start downloading: " + output.toString());
-							episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(output, new IDownloadCallback() {
-								@Override
-								public void partStart(int index, int total, String url) {
-								}
+							try (OutputStream os = Files.newOutputStream(output)) {
+								episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(os, new IDownloadCallback() {
+									@Override
+									public void partStart(int index, int total, String url) {
+									}
 
-								@Override
-								public void partDone(int index, int total, long koSec) {
-									System.out.print(String.format("%d/%d (%d ko/sec)\r", index + 1, total, koSec));
-								}
+									@Override
+									public void partDone(int index, int total, long koSec) {
+										System.out.print(String.format("%d/%d (%d ko/sec)\r", index + 1, total, koSec));
+									}
 
-								@Override
-								public void done() {
-									System.out.println("");
-								}
-							});
+									@Override
+									public void done() {
+										System.out.println("");
+									}
+								});
+							}
 						} else {
 							System.out.println("File already exist: " + output);
 						}
@@ -75,10 +79,11 @@ public class Launcher {
 	}
 
 	private static void display(Episode episode, boolean desc) {
-		System.out.println("Title:      " + episode.getTitle() + " / " + episode.getTitle2());
-		System.out.println("Genre:      " + episode.getGenre());
-		System.out.println("Duration:   " + episode.getDuration() + " min");
+		System.out.println("Title     : " + episode.getTitle() + " / " + episode.getTitle2());
+		System.out.println("Genre     : " + episode.getGenre());
+		System.out.println("Duration  : " + episode.getDuration() + " min");
 		if (desc) {
+			System.out.println("Id        : " + episode.getId());
 			System.out.println("Desciption: " + episode.getDescription());
 		}
 		System.out.println();

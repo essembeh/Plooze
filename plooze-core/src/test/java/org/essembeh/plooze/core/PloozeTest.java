@@ -1,5 +1,6 @@
 package org.essembeh.plooze.core;
 
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -24,7 +25,8 @@ public class PloozeTest {
 		Path zipFile = Files.createTempFile("plooze", ".zip");
 		PloozeUtils.downloadZipFile(zipFile);
 		Assert.assertNotEquals(0, Files.getFileAttributeView(zipFile, BasicFileAttributeView.class).readAttributes().size());
-		PloozeDatabase ploozeDatabase = PloozeDatabase.read(zipFile);
+		PloozeDatabase ploozeDatabase = new PloozeDatabase();
+		ploozeDatabase.refresh(zipFile);
 		Optional<Episode> selection = ploozeDatabase.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
 		M3UPlaylist playlist = selection.get().getPlaylist();
@@ -36,22 +38,24 @@ public class PloozeTest {
 		Assert.assertFalse(multiPartPlaylist.getUrls().isEmpty());
 		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_FILENAME_FORMAT, selection.get());
 		Path output = Files.createTempFile("plooze", filename);
-		multiPartPlaylist.download(output, new IDownloadCallback() {
-			@Override
-			public void partStart(int index, int total, String url) {
-				System.out.println(String.format("%d/%d %s", index + 1, total, url));
-			}
+		try (OutputStream out = Files.newOutputStream(output)) {
+			multiPartPlaylist.download(out, new IDownloadCallback() {
+				@Override
+				public void partStart(int index, int total, String url) {
+					System.out.println(String.format("%d/%d %s", index + 1, total, url));
+				}
 
-			@Override
-			public void partDone(int index, int total, long koSec) {
-				System.out.println(String.format("Finished %d ko/sec", koSec));
-			}
+				@Override
+				public void partDone(int index, int total, long koSec) {
+					System.out.println(String.format("Finished %d ko/sec", koSec));
+				}
 
-			@Override
-			public void done() {
+				@Override
+				public void done() {
 
-			}
-		});
+				}
+			});
+		}
 		Assert.assertNotEquals(0, Files.getFileAttributeView(output, BasicFileAttributeView.class).readAttributes().size());
 	}
 }
