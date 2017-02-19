@@ -21,15 +21,18 @@ public class AppOptions {
 	public static final String UPDATE = "u";
 	public static final String DOWNLOAD = "d";
 	public static final String OVERWRITE = "o";
-	public static final String DESCRIPTION = "v";
+	public static final String VERBOSE = "v";
+	public static final String CRON = "c";
 
 	private static final Options OPTIONS = new Options();
 	static {
 		OPTIONS.addOption(HELP, "help", false, "Display help");
 		OPTIONS.addOption(UPDATE, "update", false, "Download latest content");
 		OPTIONS.addOption(DOWNLOAD, "download", true, "Download episodes to output folder");
-		OPTIONS.addOption(DESCRIPTION, "description", false, "Display episode description");
+		OPTIONS.addOption(VERBOSE, "verbose", false, "Display more information");
 		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite file if they already exist");
+		OPTIONS.addOption(CRON, "cron", true, "Run every X hours");
+
 	}
 
 	public static AppOptions parse(String... args) throws ParseException {
@@ -51,7 +54,7 @@ public class AppOptions {
 	}
 
 	public boolean canProcess() {
-		return !commandLine.hasOption(HELP) && !commandLine.getArgList().isEmpty();
+		return !commandLine.hasOption(HELP);
 	}
 
 	public void displayHelp() {
@@ -72,11 +75,15 @@ public class AppOptions {
 		return commandLine.hasOption(UPDATE);
 	}
 
-	public boolean displayDescription() {
-		return commandLine.hasOption(DESCRIPTION);
+	public boolean isVerbose() {
+		return commandLine.hasOption(VERBOSE);
 	}
 
-	public boolean overwrite() {
+	public boolean shouldOverwrite() {
 		return commandLine.hasOption(OVERWRITE);
+	}
+
+	public Optional<Integer> getCronDelay() {
+		return getOptionValue(CRON).map(Integer::parseInt);
 	}
 }

@@ -5,7 +5,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
@@ -22,70 +26,89 @@ public class Launcher {
 	public static void main(String[] args) throws ParseException, IOException {
 		AppOptions options = AppOptions.parse(args);
 		if (options.canProcess()) {
-			if (options.updateZipfile()) {
-				if (!Files.isDirectory(ZIP_FILE.getParent())) {
-					Files.createDirectories(ZIP_FILE.getParent());
-				}
-				System.out.println("Update zip file: " + ZIP_FILE);
-				PloozeUtils.downloadZipFile(ZIP_FILE);
-			}
 			PloozeDatabase database = new PloozeDatabase();
-			database.refresh(ZIP_FILE);
-			System.out.println("Found " + database.getEpisodes().size() + " episodes");
-
-			for (String arg : options.getArgs()) {
-				System.out.println("Search: " + arg);
-				System.out.println();
-				List<Episode> result = database.search(arg);
-				for (Episode episode : result) {
-					if (options.getDownloadFolder().isPresent()) {
-						String filename = StringUtils.defaultIfBlank(episode.getTitle2(), episode.getId());
-						Path output = Paths.get(options.getDownloadFolder().get().toString(), episode.getTitle(), filename + PloozeConstants.EXTENSION);
-						if (!Files.exists(output) || options.overwrite()) {
-							if (!Files.isDirectory(output.getParent())) {
-								Files.createDirectories(output.getParent());
-							}
-							System.out.println("Start downloading: " + output.toString());
-							try (OutputStream os = Files.newOutputStream(output)) {
-								episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(os, new IDownloadCallback() {
-									@Override
-									public void partStart(int index, int total, String url) {
-									}
-
-									@Override
-									public void partDone(int index, int total, long koSec) {
-										System.out.print(String.format("%d/%d (%d ko/sec)\r", index + 1, total, koSec));
-									}
-
-									@Override
-									public void done() {
-										System.out.println("");
-									}
-								});
-							}
-						} else {
-							System.out.println("File already exist: " + output);
+			if (options.getCronDelay().isPresent()) {
+				Timer timer = new Timer("Plooze cron", false);
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						try {
+							process(database, options);
+						} catch (IOException e) {
+							e.printStackTrace();
 						}
-					} else {
-						display(episode, options.displayDescription());
+						System.out.println("[DAEMON] " +
+								SimpleDateFormat.getTimeInstance().format(new Date()) + ": Next download in " + options.getCronDelay().get() + " hour(s)");
 					}
-				}
-				System.out.println("");
+				}, 0, options.getCronDelay().get() * 3600000);
+			} else {
+				process(database, options);
 			}
-
 		} else {
 			options.displayHelp();
 		}
 	}
 
-	private static void display(Episode episode, boolean desc) {
-		System.out.println("Title     : " + episode.getTitle() + " / " + episode.getTitle2());
-		System.out.println("Genre     : " + episode.getGenre());
-		System.out.println("Duration  : " + episode.getDuration() + " min");
-		if (desc) {
-			System.out.println("Id        : " + episode.getId());
-			System.out.println("Desciption: " + episode.getDescription());
+	private static void process(PloozeDatabase database, AppOptions options) throws IOException {
+		if (options.updateZipfile()) {
+			if (!Files.isDirectory(ZIP_FILE.getParent())) {
+				Files.createDirectories(ZIP_FILE.getParent());
+			}
+			PloozeUtils.downloadZipFile(ZIP_FILE);
+			System.out.println("Zip file updated: " + ZIP_FILE);
 		}
-		System.out.println();
+		database.refresh(ZIP_FILE);
+		System.out.println("Database loaded with " + database.getEpisodes().size() + " episodes");
+		for (String arg : options.getArgs()) {
+			if (options.isVerbose()) {
+				System.out.println("Search: '" + arg + "'");
+			}
+			List<Episode> result = database.search(arg);
+			for (Episode episode : result) {
+				if (options.getDownloadFolder().isPresent()) {
+					String filename = StringUtils.defaultIfBlank(episode.getTitle2(), episode.getId());
+					Path output = Paths.get(options.getDownloadFolder().get().toString(), episode.getTitle(), filename + PloozeConstants.EXTENSION);
+					if (!Files.exists(output) || options.shouldOverwrite()) {
+						if (!Files.isDirectory(output.getParent())) {
+							Files.createDirectories(output.getParent());
+						}
+						System.out.println("Start downloading: " + output.toString());
+						try (OutputStream os = Files.newOutputStream(output)) {
+							episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(os, new IDownloadCallback() {
+								@Override
+								public void partStart(int index, int total, String url) {
+								}
+
+								@Override
+								public void partDone(int index, int total, long koSec) {
+									System.out.print(String.format("\r%d/%d (%d ko/sec)", index + 1, total, koSec));
+								}
+
+								@Override
+								public void done() {
+									System.out.println("");
+								}
+							});
+						}
+					} else {
+						System.out.println("File already exists: " + output);
+					}
+				} else {
+					display(episode, options.isVerbose());
+				}
+			}
+		}
+	}
+
+	private static void display(Episode episode, boolean verbose) {
+		if (verbose) {
+			System.out.println("Title     : " + episode.getTitle() + " / " + episode.getTitle2());
+			System.out.println("Genre     : " + episode.getGenre());
+			System.out.println("Duration  : " + episode.getDuration() + " min");
+			System.out.println("Desciption: " + episode.getDescription());
+			System.out.println("");
+		} else {
+			System.out.println(String.format("[%s] %s: %s (%d min)", episode.getId(), episode.getTitle(), episode.getTitle2(), episode.getDuration()));
+		}
 	}
 }
