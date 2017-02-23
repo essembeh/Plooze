@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -13,8 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.utils.PloozeUtils;
 
 public class PloozeDatabase {
-
-	private final static String[] FIELDS = { "titre", "sous_titre" };
 
 	private final List<Episode> episodes = new ArrayList<>();
 
@@ -29,10 +28,10 @@ public class PloozeDatabase {
 		}
 	}
 
-	public List<Episode> search(String arg) {
+	public List<Episode> search(String arg, String[] fields) {
 		List<Episode> out = new ArrayList<>();
 		for (Episode episode : episodes) {
-			for (String field : FIELDS) {
+			for (String field : fields) {
 				if (StringUtils.containsIgnoreCase(episode.getProperty(field), arg)) {
 					out.add(episode);
 					break;
@@ -42,7 +41,14 @@ public class PloozeDatabase {
 		return out;
 	}
 
-	public Optional<Episode> findById(String id) {
-		return getEpisodes().stream().filter(ep -> ep.getId().equals(id)).findFirst();
+	public String[] getFields() {
+		if (episodes.isEmpty()) {
+			return null;
+		}
+		return episodes.get(0).getJson().entrySet().stream().map(Entry::getKey).toArray(String[]::new);
+	}
+
+	public Optional<Episode> findById(int id) {
+		return getEpisodes().stream().filter(ep -> ep.getId() == id).findFirst();
 	}
 }

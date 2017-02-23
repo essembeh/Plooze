@@ -21,8 +21,8 @@ public class Episode {
 		this.json = json;
 	}
 
-	public String getId() {
-		return getProperty("id_diffusion");
+	public int getId() {
+		return Integer.parseInt(getProperty("id_diffusion"));
 	}
 
 	public String getTitle() {
@@ -75,6 +75,10 @@ public class Episode {
 
 	public String getGenre() {
 		return getProperty("format") + " / " + getProperty("genre_simplifie");
+	}
+
+	public String getChannel() {
+		return getProperty("chaine");
 	}
 
 }

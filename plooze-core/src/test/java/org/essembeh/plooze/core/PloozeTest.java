@@ -4,6 +4,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,6 +28,11 @@ public class PloozeTest {
 		Assert.assertNotEquals(0, Files.getFileAttributeView(zipFile, BasicFileAttributeView.class).readAttributes().size());
 		PloozeDatabase ploozeDatabase = new PloozeDatabase();
 		ploozeDatabase.refresh(zipFile);
+		Assert.assertFalse(ploozeDatabase.getEpisodes().isEmpty());
+		Assert.assertTrue(ploozeDatabase.getFields().length > PloozeConstants.DEFAULT_FIELDS.length);
+		for (String f : PloozeConstants.DEFAULT_FIELDS) {
+			Assert.assertTrue(Arrays.asList(ploozeDatabase.getFields()).contains(f));
+		}
 		Optional<Episode> selection = ploozeDatabase.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
 		M3UPlaylist playlist = selection.get().getPlaylist();

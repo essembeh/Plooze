@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.utils.IDownloadCallback;
+import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
 
 import com.google.gson.GsonBuilder;
@@ -31,11 +32,11 @@ public class Launcher {
 			return database.getEpisodes().size();
 		});
 		Spark.get("/search/:motif", (i, o) -> {
-			List<Episode> episodes = database.search(i.params(":motif"));
+			List<Episode> episodes = database.search(i.params(":motif"), PloozeConstants.DEFAULT_FIELDS);
 			return new GsonBuilder().setPrettyPrinting().create().toJson(episodes.stream().map(Episode::getJson).toArray());
 		});
 		Spark.get("/view/:id", (i, o) -> {
-			Optional<Episode> ep = database.findById(i.params(":id"));
+			Optional<Episode> ep = database.findById(Integer.parseInt(i.params(":id")));
 			if (!ep.isPresent()) {
 				Spark.halt(404);
 			} else {
@@ -45,7 +46,7 @@ public class Launcher {
 			return null;
 		});
 		Spark.get("/get/:id", (i, o) -> {
-			Optional<Episode> ep = database.findById(i.params(":id"));
+			Optional<Episode> ep = database.findById(Integer.parseInt(i.params(":id")));
 			if (!ep.isPresent()) {
 				Spark.halt(404);
 			} else {
