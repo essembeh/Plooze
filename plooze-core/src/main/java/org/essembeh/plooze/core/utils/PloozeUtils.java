@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,5 +64,14 @@ public class PloozeUtils {
 	public static String resolve(String format, Episode in) {
 		StrSubstitutor substitutor = new StrSubstitutor(new JsonStrLookup(in.getJson()), "${", "}", '\\');
 		return substitutor.replace(format);
+	}
+
+	public static boolean isHttpUrl(String in) {
+		try {
+			URL url = new URL(in);
+			return url.getProtocol().toLowerCase().startsWith("http");
+		} catch (MalformedURLException ignored) {
+		}
+		return false;
 	}
 }

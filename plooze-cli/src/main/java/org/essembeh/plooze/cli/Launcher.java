@@ -1,5 +1,6 @@
 package org.essembeh.plooze.cli;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -17,8 +18,10 @@ import java.util.stream.Stream;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.model.Episode;
+import org.essembeh.plooze.core.model.MultiPartPlaylist;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.utils.IDownloadCallback;
+import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
 
@@ -94,10 +97,18 @@ public class Launcher {
 							Files.createDirectories(output.getParent());
 						}
 						System.out.println("Start downloading: " + output.toString());
-						try (OutputStream os = Files.newOutputStream(output)) {
-							episode.getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(os, new IDownloadCallback() {
+						try (OutputStream outputStream = Files.newOutputStream(output);
+								BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream)) {
+							MultiPartPlaylist stream = null;
+							if (options.downloadHd()) {
+								stream = PlaylistUtils.getHdStream(episode).orElse(null);
+							}
+							if (stream == null) {
+								stream = PlaylistUtils.getBestStream(episode.getMasterPlaylist());
+							}
+							stream.download(bufferedOutputStream, new IDownloadCallback() {
 								@Override
-								public void partStart(int index, int total, String url) {
+								public void partStart(int index, int total) {
 								}
 
 								@Override

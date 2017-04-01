@@ -3,7 +3,7 @@ package org.essembeh.plooze.core.utils;
 public interface PloozeConstants {
 
 	String[] DEFAULT_FIELDS = { "titre", "sous_titre" };
-	String EXTENSION = ".mpg";
+	String EXTENSION = ".mp4";
 	String FIELDS_SEPARATOR = ",";
 	String DEFAULT_FILENAME_FORMAT = "${titre} - ${sous_titre}" + EXTENSION;
 	String ZIP_URL = "http://webservices.francetelevisions.fr/catchup/flux/flux_main.zip";

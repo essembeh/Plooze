@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.utils.IDownloadCallback;
+import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
 
@@ -41,7 +42,7 @@ public class Launcher {
 				Spark.halt(404);
 			} else {
 				o.type("application/x-mpegURL");
-				o.redirect(ep.get().getPlaylist().getHighestBandwidth().get().getUrl());
+				o.redirect(PlaylistUtils.getBestStream(ep.get().getMasterPlaylist()).getUrl().toString());
 			}
 			return null;
 		});
@@ -51,9 +52,9 @@ public class Launcher {
 				Spark.halt(404);
 			} else {
 				o.type("video/MP2T");
-				ep.get().getPlaylist().getHighestBandwidth().get().getMultiPartPlaylist().download(o.raw().getOutputStream(), new IDownloadCallback() {
+				PlaylistUtils.getBestStream(ep.get().getMasterPlaylist()).download(o.raw().getOutputStream(), new IDownloadCallback() {
 					@Override
-					public void partStart(int index, int total, String url) {
+					public void partStart(int index, int total) {
 					}
 
 					@Override

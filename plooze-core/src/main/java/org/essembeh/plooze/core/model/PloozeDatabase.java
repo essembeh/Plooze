@@ -3,7 +3,6 @@ package org.essembeh.plooze.core.model;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -18,7 +17,7 @@ public class PloozeDatabase {
 	private final List<Episode> episodes = new ArrayList<>();
 
 	public List<Episode> getEpisodes() {
-		return Collections.unmodifiableList(episodes);
+		return new ArrayList<>(episodes);
 	}
 
 	public void refresh(Path zipFile) throws ZipException, IOException {
