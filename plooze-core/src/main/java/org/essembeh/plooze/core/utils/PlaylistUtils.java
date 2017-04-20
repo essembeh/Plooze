@@ -2,6 +2,7 @@ package org.essembeh.plooze.core.utils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -9,7 +10,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.model.Episode;
-import org.essembeh.plooze.core.model.MultiPartPlaylist;
 import org.essembeh.plooze.core.model.RemoteResource;
 
 public class PlaylistUtils {
@@ -31,7 +31,7 @@ public class PlaylistUtils {
 		return Optional.empty();
 	}
 
-	public static Optional<MultiPartPlaylist> getHdStream(Episode ep) {
+	public static Optional<URL> getHdStream(Episode ep) {
 		String suffix = ep.getUrlSuffix();
 		Matcher matcher = HD_PATTERN.matcher(suffix);
 		if (matcher.find()) {
@@ -43,16 +43,16 @@ public class PlaylistUtils {
 		return Optional.empty();
 	}
 
-	public static MultiPartPlaylist getFirstStream(RemoteResource playlist) throws IOException {
+	public static URL getFirstStream(RemoteResource playlist) throws IOException {
 		for (String line : playlist.readLines()) {
 			if (StringUtils.isNotBlank(line) && !PlaylistUtils.isComment(line)) {
-				return new MultiPartPlaylist(line);
+				return new URL(line);
 			}
 		}
 		throw new IllegalStateException("Cannot find stream");
 	}
 
-	public static MultiPartPlaylist getBestStream(RemoteResource playlist) throws MalformedURLException, IOException {
+	public static URL getBestStream(RemoteResource playlist) throws MalformedURLException, IOException {
 		int bestBandwith = 0;
 		String bestUrl = null;
 		List<String> lines = playlist.readLines();
@@ -73,6 +73,6 @@ public class PlaylistUtils {
 		if (StringUtils.isBlank(bestUrl)) {
 			throw new IllegalStateException("Cannot find stream");
 		}
-		return new MultiPartPlaylist(bestUrl);
+		return new URL(bestUrl);
 	}
 }

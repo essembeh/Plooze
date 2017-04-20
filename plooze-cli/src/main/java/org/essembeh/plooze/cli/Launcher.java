@@ -1,8 +1,7 @@
 package org.essembeh.plooze.cli;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,9 +17,8 @@ import java.util.stream.Stream;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.model.Episode;
-import org.essembeh.plooze.core.model.MultiPartPlaylist;
 import org.essembeh.plooze.core.model.PloozeDatabase;
-import org.essembeh.plooze.core.utils.IDownloadCallback;
+import org.essembeh.plooze.core.utils.FfmpegLauncher;
 import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
@@ -33,7 +31,7 @@ public class Launcher {
 	private static final Path ZIP_FILE = Paths.get(System.getProperty("user.home"), ".cache", "plooze.zip");
 	private static final Gson JSON_PP = new GsonBuilder().setPrettyPrinting().create();
 
-	public static void main(String[] args) throws ParseException, IOException {
+	public static void main(String[] args) throws ParseException, IOException, InterruptedException {
 		AppOptions options = AppOptions.parse(args);
 		if (options.canProcess()) {
 			PloozeDatabase database = new PloozeDatabase();
@@ -45,7 +43,7 @@ public class Launcher {
 						System.out.println("[DAEMON] " + SimpleDateFormat.getTimeInstance().format(new Date()) + ": Start processing");
 						try {
 							process(database, options);
-						} catch (IOException e) {
+						} catch (IOException | InterruptedException e) {
 							e.printStackTrace();
 						}
 						System.out.println("[DAEMON] " + SimpleDateFormat.getTimeInstance().format(new Date()) + ": Next download in "
@@ -60,7 +58,7 @@ public class Launcher {
 		}
 	}
 
-	private static void process(PloozeDatabase database, AppOptions options) throws IOException {
+	private static void process(PloozeDatabase database, AppOptions options) throws IOException, InterruptedException {
 		if (options.updateZipfile()) {
 			if (!Files.isDirectory(ZIP_FILE.getParent())) {
 				Files.createDirectories(ZIP_FILE.getParent());
@@ -97,31 +95,27 @@ public class Launcher {
 							Files.createDirectories(output.getParent());
 						}
 						System.out.println("Start downloading: " + output.toString());
-						try (OutputStream outputStream = Files.newOutputStream(output);
-								BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream)) {
-							MultiPartPlaylist stream = null;
-							if (options.downloadHd()) {
-								stream = PlaylistUtils.getHdStream(episode).orElse(null);
-							}
-							if (stream == null) {
-								stream = PlaylistUtils.getBestStream(episode.getMasterPlaylist());
-							}
-							stream.download(bufferedOutputStream, new IDownloadCallback() {
-								@Override
-								public void partStart(int index, int total) {
-								}
-
-								@Override
-								public void partDone(int index, int total, long koSec) {
-									System.out.print(String.format("     %d/%d (%d ko/sec)\r", index + 1, total, koSec));
-								}
-
-								@Override
-								public void done() {
-									System.out.println("");
-								}
-							});
+						URL stream = null;
+						if (options.downloadHd()) {
+							stream = PlaylistUtils.getHdStream(episode).orElse(null);
 						}
+						if (stream == null) {
+							stream = PlaylistUtils.getBestStream(episode.getMasterPlaylist());
+						}
+						FfmpegLauncher.DEFAULT.download(stream, output, new FfmpegLauncher.Callback() {
+							@Override
+							public void progress(String line) {
+								System.out.print("  " + line + "\r");
+							}
+
+							@Override
+							public void done(int rc) {
+								System.out.println("");
+								if (rc != 0) {
+									System.out.println("  exit value: " + rc);
+								}
+							}
+						});
 					} else {
 						if (options.isVerbose()) {
 							System.out.println("File already exists: " + output);

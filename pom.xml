@@ -8,6 +8,5 @@
   <modules>
     <module>plooze-core</module>
     <module>plooze-cli</module>
-    <module>plooze-webapp</module>
   </modules>
 </project>

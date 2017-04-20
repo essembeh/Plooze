@@ -2,7 +2,7 @@ package org.essembeh.plooze.core.utils;
 
 public interface PloozeConstants {
 
-	String[] DEFAULT_FIELDS = { "titre", "sous_titre" };
+	String[] DEFAULT_FIELDS = { "titre", "sous_titre", "id_diffusion" };
 	String EXTENSION = ".mp4";
 	String FIELDS_SEPARATOR = ",";
 	String DEFAULT_FILENAME_FORMAT = "${titre} - ${sous_titre}" + EXTENSION;

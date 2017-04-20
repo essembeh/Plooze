@@ -1,7 +1,7 @@
 package org.essembeh.plooze.core;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -13,9 +13,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.essembeh.plooze.core.model.Episode;
-import org.essembeh.plooze.core.model.MultiPartPlaylist;
 import org.essembeh.plooze.core.model.PloozeDatabase;
-import org.essembeh.plooze.core.utils.IDownloadCallback;
+import org.essembeh.plooze.core.utils.FfmpegLauncher;
 import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
@@ -45,27 +44,25 @@ public class PloozeTest {
 		}
 		Optional<Episode> selection = ploozeDatabase.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
-		MultiPartPlaylist multiPartPlaylist = PlaylistUtils.getFirstStream(selection.get().getMasterPlaylist());
+		URL stream = PlaylistUtils.getFirstStream(selection.get().getMasterPlaylist());
 		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_FILENAME_FORMAT, selection.get());
 		Path output = Files.createTempFile("plooze", filename);
-		try (OutputStream out = Files.newOutputStream(output)) {
-			multiPartPlaylist.download(out, new IDownloadCallback() {
-				@Override
-				public void partStart(int index, int total) {
-					System.out.println(String.format("%d/%d", index + 1, total));
-				}
+		FfmpegLauncher.DEFAULT.download(stream, output, new FfmpegLauncher.Callback() {
+			@Override
+			public void start(Path output) {
+				System.out.println("  > Start downloading: " + output.toString());
+			}
 
-				@Override
-				public void partDone(int index, int total, long koSec) {
-					System.out.println(String.format("Finished %d ko/sec", koSec));
-				}
+			@Override
+			public void progress(String line) {
+				System.out.println("  > " + line);
+			}
 
-				@Override
-				public void done() {
-
-				}
-			});
-		}
+			@Override
+			public void done(int rc) {
+				System.out.println("   > exit value: " + rc);
+			}
+		});
 		Assert.assertNotEquals(0, Files.getFileAttributeView(output, BasicFileAttributeView.class).readAttributes().size());
 	}
 
