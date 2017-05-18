@@ -1,13 +1,11 @@
 package org.essembeh.plooze.core.model;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.utils.PloozeUtils;
@@ -20,10 +18,10 @@ public class PloozeDatabase {
 		return new ArrayList<>(episodes);
 	}
 
-	public void refresh(Path zipFile) throws ZipException, IOException {
+	public void refresh(String... urls) throws ZipException, IOException {
 		episodes.clear();
-		try (ZipFile zf = new ZipFile(zipFile.toFile())) {
-			episodes.addAll(PloozeUtils.readZip(zf));
+		for (String url : urls) {
+			episodes.addAll(PloozeUtils.parseEpisodes(url));
 		}
 	}
 

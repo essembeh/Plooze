@@ -2,10 +2,14 @@ package org.essembeh.plooze.core.utils;
 
 public interface PloozeConstants {
 
-	String[] DEFAULT_FIELDS = { "titre", "sous_titre", "id_diffusion" };
+	String[] DEFAULT_FIELDS = { "id_diffusion", "titre", "accroche_programme" };
 	String EXTENSION = ".mp4";
 	String FIELDS_SEPARATOR = ",";
-	String DEFAULT_FILENAME_FORMAT = "${titre} - ${sous_titre}" + EXTENSION;
-	String ZIP_URL = "http://webservices.francetelevisions.fr/catchup/flux/flux_main.zip";
-	String URL_PREFIX = "http://medias2.francetv.fr/catchup-mobile";
+	String DEFAULT_FILENAME_FORMAT = "${titre} - ${soustitre}" + EXTENSION;
+
+	String CONTENT_URL_PREFIX = "http://pluzz.webservices.francetelevisions.fr/pluzz/liste/type/replay/nb/10000/chaine/";
+	String[] CONTENT_URLS = { CONTENT_URL_PREFIX + "france2", CONTENT_URL_PREFIX + "france3", CONTENT_URL_PREFIX + "france4", CONTENT_URL_PREFIX + "france5",
+			CONTENT_URL_PREFIX + "franceo" };
+
+	String DETAILS_URL__id = "http://webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion=%s&catalogue=Pluzz";
 }

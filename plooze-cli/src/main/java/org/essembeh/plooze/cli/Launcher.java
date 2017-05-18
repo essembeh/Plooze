@@ -1,7 +1,6 @@
 package org.essembeh.plooze.cli;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,16 +18,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.utils.FfmpegLauncher;
-import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
-import org.essembeh.plooze.core.utils.PloozeUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class Launcher {
 
-	private static final Path ZIP_FILE = Paths.get(System.getProperty("user.home"), ".cache", "plooze.zip");
 	private static final Gson JSON_PP = new GsonBuilder().setPrettyPrinting().create();
 
 	public static void main(String[] args) throws ParseException, IOException, InterruptedException {
@@ -59,14 +55,7 @@ public class Launcher {
 	}
 
 	private static void process(PloozeDatabase database, AppOptions options) throws IOException, InterruptedException {
-		if (options.updateZipfile()) {
-			if (!Files.isDirectory(ZIP_FILE.getParent())) {
-				Files.createDirectories(ZIP_FILE.getParent());
-			}
-			PloozeUtils.downloadZipFile(ZIP_FILE);
-			System.out.println("Zip file updated: " + ZIP_FILE);
-		}
-		database.refresh(ZIP_FILE);
+		database.refresh(PloozeConstants.CONTENT_URLS);
 		if (options.listFields()) {
 			String[] fields = database.getFields();
 			if (fields == null) {
@@ -95,14 +84,7 @@ public class Launcher {
 							Files.createDirectories(output.getParent());
 						}
 						System.out.println("Start downloading: " + output.toString());
-						URL stream = null;
-						if (options.downloadHd()) {
-							stream = PlaylistUtils.getHdStream(episode).orElse(null);
-						}
-						if (stream == null) {
-							stream = PlaylistUtils.getBestStream(episode.getMasterPlaylist());
-						}
-						FfmpegLauncher.DEFAULT.download(stream, output, new FfmpegLauncher.Callback() {
+						FfmpegLauncher.DEFAULT.download(episode.getStreamUrl(), output, new FfmpegLauncher.Callback() {
 							@Override
 							public void progress(String line) {
 								System.out.print("  " + line + "\r");

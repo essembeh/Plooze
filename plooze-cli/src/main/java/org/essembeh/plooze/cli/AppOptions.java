@@ -21,12 +21,10 @@ import org.essembeh.plooze.core.utils.PloozeConstants;
  */
 public class AppOptions {
 	public static final String HELP = "h";
-	public static final String UPDATE = "u";
 	public static final String DOWNLOAD = "d";
 	public static final String OVERWRITE = "o";
 	public static final String VERBOSE = "v";
 	public static final String JSON = "j";
-	public static final String HD = "H";
 	public static final String FIELDS = "f";
 	public static final String LIST_FIELDS = "F";
 	public static final String CRON = "c";
@@ -34,9 +32,7 @@ public class AppOptions {
 	private static final Options OPTIONS = new Options();
 	static {
 		OPTIONS.addOption(HELP, "help", false, "Display help");
-		OPTIONS.addOption(UPDATE, "update", false, "Download latest content");
 		OPTIONS.addOption(DOWNLOAD, "download", true, "Download episodes to output folder");
-		OPTIONS.addOption(HD, "hd", false, "Download HD stream if it exists");
 		OPTIONS.addOption(VERBOSE, "verbose", false, "Display more information");
 		OPTIONS.addOption(JSON, "json", false, "Display json content while searching");
 		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite file if they already exist");
@@ -83,10 +79,6 @@ public class AppOptions {
 		return getOptionValue(DOWNLOAD).map(Paths::get);
 	}
 
-	public boolean updateZipfile() {
-		return commandLine.hasOption(UPDATE);
-	}
-
 	public boolean isVerbose() {
 		return commandLine.hasOption(VERBOSE);
 	}
@@ -109,9 +101,5 @@ public class AppOptions {
 
 	public boolean dumpJson() {
 		return commandLine.hasOption(JSON);
-	}
-
-	public boolean downloadHd() {
-		return commandLine.hasOption(HD);
 	}
 }

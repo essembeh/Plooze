@@ -1,21 +1,17 @@
 package org.essembeh.plooze.core;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.utils.FfmpegLauncher;
-import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
 import org.junit.Assert;
@@ -24,27 +20,24 @@ import org.junit.Test;
 
 public class PloozeTest {
 
-	private static Path contentZip = null;
+	private static final PloozeDatabase PLOOZE_DATABASE = new PloozeDatabase();
 
 	@BeforeClass
 	public static void init() throws IOException {
-		contentZip = Files.createTempFile("plooze", ".zip");
-		PloozeUtils.downloadZipFile(contentZip);
-		Assert.assertNotEquals(0, Files.getFileAttributeView(contentZip, BasicFileAttributeView.class).readAttributes().size());
+		PLOOZE_DATABASE.refresh(PloozeConstants.CONTENT_URLS);
+		Assert.assertFalse(PLOOZE_DATABASE.getEpisodes().isEmpty());
 	}
 
 	@Test
 	public void testDownload() throws Exception {
-		PloozeDatabase ploozeDatabase = new PloozeDatabase();
-		ploozeDatabase.refresh(contentZip);
-		Assert.assertFalse(ploozeDatabase.getEpisodes().isEmpty());
-		Assert.assertTrue(ploozeDatabase.getFields().length > PloozeConstants.DEFAULT_FIELDS.length);
+		Assert.assertFalse(PLOOZE_DATABASE.getEpisodes().isEmpty());
+		Assert.assertTrue(PLOOZE_DATABASE.getFields().length > PloozeConstants.DEFAULT_FIELDS.length);
 		for (String f : PloozeConstants.DEFAULT_FIELDS) {
-			Assert.assertTrue(Arrays.asList(ploozeDatabase.getFields()).contains(f));
+			Assert.assertTrue(Arrays.asList(PLOOZE_DATABASE.getFields()).contains(f));
 		}
-		Optional<Episode> selection = ploozeDatabase.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
+		Optional<Episode> selection = PLOOZE_DATABASE.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
-		URL stream = PlaylistUtils.getFirstStream(selection.get().getMasterPlaylist());
+		String stream = selection.get().getStreamUrl();
 		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_FILENAME_FORMAT, selection.get());
 		Path output = Files.createTempFile("plooze", filename);
 		FfmpegLauncher.DEFAULT.download(stream, output, new FfmpegLauncher.Callback() {
@@ -64,20 +57,5 @@ public class PloozeTest {
 			}
 		});
 		Assert.assertNotEquals(0, Files.getFileAttributeView(output, BasicFileAttributeView.class).readAttributes().size());
-	}
-
-	@Test
-	public void testHD() throws Exception {
-		PloozeDatabase ploozeDatabase = new PloozeDatabase();
-		ploozeDatabase.refresh(contentZip);
-		List<Episode> episodes = ploozeDatabase.getEpisodes();
-		Collections.shuffle(episodes);
-		System.out.println("Search any HD stream ...");
-		Optional<Episode> ep = episodes.stream().filter(e -> {
-			System.out.println(e.getTitle() + ": " + PloozeConstants.URL_PREFIX + e.getUrlSuffix());
-			return PlaylistUtils.getHdStream(e).isPresent();
-		}).findAny();
-		Assert.assertTrue(ep.isPresent());
-		System.out.println("Found " + ep.get().getTitle());
 	}
 }

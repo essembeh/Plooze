@@ -1,11 +1,14 @@
 package org.essembeh.plooze.core.model;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.essembeh.plooze.core.utils.PlaylistUtils;
+import org.essembeh.plooze.core.utils.PloozeConstants;
+import org.essembeh.plooze.core.utils.PloozeUtils;
+
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class Episode {
@@ -26,11 +29,7 @@ public class Episode {
 	}
 
 	public String getTitle2() {
-		return getProperty("sous_titre");
-	}
-
-	public String getCode() {
-		return getProperty("code_programme");
+		return getProperty("soustitre");
 	}
 
 	public String getDescription() {
@@ -41,21 +40,13 @@ public class Episode {
 		return Integer.parseInt(getProperty("duree"));
 	}
 
-	public String getUrlSuffix() {
-		return getProperty("url_video");
-	}
-
-	public Date getDate() throws ParseException {
-		return new SimpleDateFormat("YYYY-MM-dd").parse(getProperty("date"));
-	}
-
 	@Override
 	public String toString() {
 		return json.toString();
 	}
 
 	public String getProperty(String key) {
-		return json.get(key).getAsString();
+		return json.has(key) ? json.get(key).getAsString() : "";
 	}
 
 	public JsonObject getJson() {
@@ -67,11 +58,28 @@ public class Episode {
 	}
 
 	public String getChannel() {
-		return getProperty("chaine");
+		return getProperty("chaine_label");
 	}
 
-	public RemoteResource getMasterPlaylist() throws MalformedURLException, IOException {
-		return RemoteResource.fromSuffix(getUrlSuffix());
+	public String getPlaylistUrl() throws IOException {
+		JsonElement details = PloozeUtils.getJson(String.format(PloozeConstants.DETAILS_URL__id, getId()));
+		Map<String, String> urls = new HashMap<>();
+		for (JsonElement video : details.getAsJsonObject().get("videos").getAsJsonArray()) {
+			String format = video.getAsJsonObject().get("format").getAsString();
+			String url = video.getAsJsonObject().get("url").getAsString();
+			urls.put(format, url);
+		}
+		if (urls.containsKey("hls_v5_os")) {
+			return urls.get("hls_v5_os");
+		}
+		if (urls.containsKey("m3u8-download")) {
+			return urls.get("m3u8-download");
+		}
+		throw new IllegalStateException("Cannot find stream url for " + getId());
+	}
+
+	public String getStreamUrl() throws IOException {
+		return PlaylistUtils.getBestStream(new RemoteResource(getPlaylistUrl()));
 	}
 
 }

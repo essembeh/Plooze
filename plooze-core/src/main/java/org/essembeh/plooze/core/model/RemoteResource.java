@@ -2,12 +2,10 @@ package org.essembeh.plooze.core.model;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.essembeh.plooze.core.utils.PloozeConstants;
 
 public class RemoteResource {
 
@@ -17,10 +15,6 @@ public class RemoteResource {
 		} catch (IOException e) {
 			return false;
 		}
-	}
-
-	public static RemoteResource fromSuffix(String prefix) throws MalformedURLException, IOException {
-		return new RemoteResource(PloozeConstants.URL_PREFIX + prefix);
 	}
 
 	protected final URL url;

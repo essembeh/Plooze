@@ -3,7 +3,6 @@ package org.essembeh.plooze.core.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,11 +43,11 @@ public class FfmpegLauncher {
 		}
 	}
 
-	public boolean download(URL url, Path output, Callback callback) throws IOException, InterruptedException {
+	public boolean download(String url, Path output, Callback callback) throws IOException, InterruptedException {
 		Path tmpOutput = Paths.get(output.toString() + ".part");
 		List<String> command = new ArrayList<>();
 		command.add(binary);
-		command.addAll(Arrays.asList("-i", url.toString()));
+		command.addAll(Arrays.asList("-i", url));
 		command.addAll(Arrays.asList("-c", "copy"));
 		command.addAll(Arrays.asList("-f", "mp4"));
 		command.addAll(Arrays.asList("-v", "info"));
