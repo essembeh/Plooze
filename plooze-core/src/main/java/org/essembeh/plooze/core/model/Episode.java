@@ -13,6 +13,12 @@ import com.google.gson.JsonObject;
 
 public class Episode {
 
+	public enum Quality {
+		BEST,
+		MEDIUM,
+		LOWEST
+	}
+
 	private final JsonObject json;
 
 	public Episode(JsonObject json) {
@@ -78,8 +84,8 @@ public class Episode {
 		throw new IllegalStateException("Cannot find stream url for " + getId());
 	}
 
-	public String getStreamUrl() throws IOException {
-		return PlaylistUtils.getBestStream(new RemoteResource(getPlaylistUrl()));
+	public StreamUrl getStreamUrl(Quality quality) throws IOException {
+		return PlaylistUtils.getStream(new RemoteResource(getPlaylistUrl()), quality);
 	}
 
 }

@@ -17,6 +17,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
+import org.essembeh.plooze.core.model.StreamUrl;
 import org.essembeh.plooze.core.utils.FfmpegLauncher;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 
@@ -78,13 +79,14 @@ public class Launcher {
 				if (options.getDownloadFolder().isPresent()) {
 					// DOWNLOAD MODE
 					String filename = StringUtils.defaultIfBlank(episode.getTitle2(), "" + episode.getId());
+					StreamUrl streamUrl = episode.getStreamUrl(options.getQuality());
 					Path output = Paths.get(options.getDownloadFolder().get().toString(), episode.getTitle(), filename + PloozeConstants.EXTENSION);
 					if (!Files.exists(output) || options.shouldOverwrite()) {
 						if (!Files.isDirectory(output.getParent())) {
 							Files.createDirectories(output.getParent());
 						}
-						System.out.println("Start downloading: " + output.toString());
-						FfmpegLauncher.DEFAULT.download(episode.getStreamUrl(), output, new FfmpegLauncher.Callback() {
+						System.out.println("Start downloading: " + output.toString() + ", resolution: " + streamUrl.getResolution());
+						FfmpegLauncher.DEFAULT.download(streamUrl.getUrl(), output, new FfmpegLauncher.Callback() {
 							@Override
 							public void progress(String line) {
 								System.out.print("  " + line + "\r");

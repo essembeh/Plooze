@@ -12,4 +12,5 @@ public interface PloozeConstants {
 			CONTENT_URL_PREFIX + "franceo" };
 
 	String DETAILS_URL__id = "http://webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion=%s&catalogue=Pluzz";
+	String MEDIUM_RESOLUTION = "704x396";
 }

@@ -10,7 +10,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.essembeh.plooze.core.model.Episode;
+import org.essembeh.plooze.core.model.Episode.Quality;
 import org.essembeh.plooze.core.model.PloozeDatabase;
+import org.essembeh.plooze.core.model.StreamUrl;
 import org.essembeh.plooze.core.utils.FfmpegLauncher;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 import org.essembeh.plooze.core.utils.PloozeUtils;
@@ -29,18 +31,26 @@ public class PloozeTest {
 	}
 
 	@Test
+	public void testQuality() throws Exception {
+		Optional<Episode> selection = PLOOZE_DATABASE.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
+		Assert.assertTrue(selection.isPresent());
+		for (Quality quality : Quality.values()) {
+			Assert.assertNotNull(selection.get().getStreamUrl(quality));
+		}
+	}
+
+	@Test
 	public void testDownload() throws Exception {
-		Assert.assertFalse(PLOOZE_DATABASE.getEpisodes().isEmpty());
 		Assert.assertTrue(PLOOZE_DATABASE.getFields().length > PloozeConstants.DEFAULT_FIELDS.length);
 		for (String f : PloozeConstants.DEFAULT_FIELDS) {
 			Assert.assertTrue(Arrays.asList(PLOOZE_DATABASE.getFields()).contains(f));
 		}
 		Optional<Episode> selection = PLOOZE_DATABASE.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
-		String stream = selection.get().getStreamUrl();
+		StreamUrl stream = selection.get().getStreamUrl(Quality.LOWEST);
 		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_FILENAME_FORMAT, selection.get());
 		Path output = Files.createTempFile("plooze", filename);
-		FfmpegLauncher.DEFAULT.download(stream, output, new FfmpegLauncher.Callback() {
+		FfmpegLauncher.DEFAULT.download(stream.getUrl(), output, new FfmpegLauncher.Callback() {
 			@Override
 			public void start(Path output) {
 				System.out.println("  > Start downloading: " + output.toString());
