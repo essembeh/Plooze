@@ -18,10 +18,10 @@ public class PloozeDatabase {
 		return new ArrayList<>(episodes);
 	}
 
-	public void refresh(String... urls) throws ZipException, IOException {
+	public void refresh(Channel... channels) throws ZipException, IOException {
 		episodes.clear();
-		for (String url : urls) {
-			episodes.addAll(PloozeUtils.parseEpisodes(url));
+		for (Channel channel : channels) {
+			episodes.addAll(PloozeUtils.parseEpisodes(channel.getContentUrl()));
 		}
 	}
 

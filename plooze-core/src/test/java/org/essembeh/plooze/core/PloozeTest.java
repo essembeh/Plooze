@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.essembeh.plooze.core.model.Channel;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.Episode.Quality;
 import org.essembeh.plooze.core.model.PloozeDatabase;
@@ -26,7 +27,7 @@ public class PloozeTest {
 
 	@BeforeClass
 	public static void init() throws IOException {
-		PLOOZE_DATABASE.refresh(PloozeConstants.CONTENT_URLS);
+		PLOOZE_DATABASE.refresh(Channel.FRANCE2);
 		Assert.assertFalse(PLOOZE_DATABASE.getEpisodes().isEmpty());
 	}
 

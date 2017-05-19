@@ -5,8 +5,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -15,6 +13,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.essembeh.plooze.core.model.Channel;
 import org.essembeh.plooze.core.model.Episode.Quality;
 import org.essembeh.plooze.core.utils.PloozeConstants;
 
@@ -23,15 +22,17 @@ import org.essembeh.plooze.core.utils.PloozeConstants;
  *
  */
 public class AppOptions {
-	public static final String HELP = "h";
+	public static final String CHANNEL = "c";
 	public static final String DOWNLOAD = "d";
-	public static final String OVERWRITE = "o";
-	public static final String VERBOSE = "v";
-	public static final String JSON = "j";
 	public static final String FIELDS = "f";
-	public static final String LIST_FIELDS = "F";
-	public static final String CRON = "c";
+	public static final String HELP = "h";
+	public static final String JSON = "j";
+	public static final String OVERWRITE = "o";
 	public static final String QUALITY = "q";
+	public static final String VERBOSE = "v";
+
+	public static final String CRON = "C";
+	public static final String LIST_FIELDS = "F";
 
 	private static final Options OPTIONS = new Options();
 	static {
@@ -39,8 +40,9 @@ public class AppOptions {
 		OPTIONS.addOption(VERBOSE, "verbose", false, "Display more information");
 		OPTIONS.addOption(CRON, "cron", true, "Run every X hours");
 		OPTIONS.addOption(DOWNLOAD, "download", true, "Download episodes to output folder");
-		OPTIONS.addOption(QUALITY, "quality", true, "Change the quality of downloaded stream ("
-				+ Stream.of(Quality.values()).map(Object::toString).map(String::toLowerCase).collect(Collectors.joining(", ")) + ")");
+		OPTIONS.addOption(QUALITY, "quality", true,
+				"Change the quality of downloaded stream. Values: " + StringUtils.join(Quality.values(), ", ").toLowerCase());
+		OPTIONS.addOption(CHANNEL, "channel", true, "Only search in a specifi channel. Values: " + StringUtils.join(Channel.values(), ", ").toLowerCase());
 		OPTIONS.addOption(JSON, "json", false, "Display json content while searching");
 		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite file if they already exist");
 		OPTIONS.addOption(FIELDS, "fields", true, "Match motif on given fields (defaults are \""
@@ -114,5 +116,12 @@ public class AppOptions {
 			return Quality.valueOf(commandLine.getOptionValue(QUALITY).toUpperCase());
 		}
 		return Quality.BEST;
+	}
+
+	public Channel[] getChannels() {
+		if (commandLine.hasOption(CHANNEL)) {
+			return new Channel[] { Channel.valueOf(commandLine.getOptionValue(CHANNEL).toUpperCase()) };
+		}
+		return Channel.values();
 	}
 }

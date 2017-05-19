@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.essembeh.plooze.core.model.Channel;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.model.StreamUrl;
@@ -56,7 +57,9 @@ public class Launcher {
 	}
 
 	private static void process(PloozeDatabase database, AppOptions options) throws IOException, InterruptedException {
-		database.refresh(PloozeConstants.CONTENT_URLS);
+		Channel[] channels = options.getChannels();
+		System.out.println("Refresh content for: " + StringUtils.join(channels, ", ").toLowerCase());
+		database.refresh(channels);
 		if (options.listFields()) {
 			String[] fields = database.getFields();
 			if (fields == null) {
