@@ -16,20 +16,24 @@ import org.essembeh.plooze.core.model.StreamUrl;
 public class PlaylistUtils {
 
 	public static final String COMMENT_PREFIX = "#";
-	private static final Pattern BANDWIDTH_PATTERN = Pattern.compile(COMMENT_PREFIX + "EXT-X-STREAM-INF:.*,BANDWIDTH=(?<BANDWIDTH>\\d+)(,.*)?");
-	private static final Pattern RESOLUTION_PATTERN = Pattern.compile(COMMENT_PREFIX + "EXT-X-STREAM-INF:.*,RESOLUTION=(?<RESOLUTION>\\d+x\\d+)(,.*)?");
+	public static final String STREAM_COMMENT_PREFIX = COMMENT_PREFIX + "EXT-X-STREAM-INF";
+	private static final Pattern BANDWIDTH_PATTERN = Pattern.compile(STREAM_COMMENT_PREFIX + ":.*,BANDWIDTH=(?<BANDWIDTH>\\d+)(,.*)?");
+	private static final Pattern RESOLUTION_PATTERN = Pattern.compile(STREAM_COMMENT_PREFIX + ":.*,RESOLUTION=(?<RESOLUTION>\\d+x\\d+)(,.*)?");
 
-	public static boolean isComment(String line) {
-		return line.startsWith(COMMENT_PREFIX);
+	public static boolean isStreamUrl(String line) {
+		return line.startsWith("http://") || line.startsWith("https://");
 	}
 
-	public static Optional<Integer> getBandwidth(String line) {
+	public static boolean isStreamInfoComment(String line) {
+		return line.startsWith(STREAM_COMMENT_PREFIX);
+	}
+
+	public static int getBandwidth(String line) {
 		Matcher matcher = BANDWIDTH_PATTERN.matcher(line);
 		if (matcher.matches()) {
-			Integer out = Integer.parseInt(matcher.group("BANDWIDTH"));
-			return Optional.of(out);
+			return Integer.parseInt(matcher.group("BANDWIDTH"));
 		}
-		return Optional.empty();
+		throw new IllegalArgumentException("Cannot find bandwidth in comment: " + line);
 	}
 
 	public static Optional<String> getResolution(String line) {
@@ -45,9 +49,12 @@ public class PlaylistUtils {
 		SortedSet<StreamUrl> streams = new TreeSet<>();
 		for (int i = 0; i < lines.size() - 1; i++) {
 			String comment, url;
-			if (PlaylistUtils.isComment(comment = lines.get(i)) && !PlaylistUtils.isComment(url = lines.get(i + 1))) {
-				StreamUrl streamUrl = new StreamUrl(url, getBandwidth(comment).get(), getResolution(comment).get());
-				streams.add(streamUrl);
+			if (PlaylistUtils.isStreamInfoComment(comment = lines.get(i)) && PlaylistUtils.isStreamUrl(url = lines.get(i + 1))) {
+				Optional<String> resolution = getResolution(comment);
+				if (resolution.isPresent()) {
+					StreamUrl streamUrl = new StreamUrl(url, getBandwidth(comment), resolution.get());
+					streams.add(streamUrl);
+				}
 			}
 		}
 		if (streams.isEmpty()) {

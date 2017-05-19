@@ -82,12 +82,12 @@ public class Launcher {
 				if (options.getDownloadFolder().isPresent()) {
 					// DOWNLOAD MODE
 					String filename = StringUtils.defaultIfBlank(episode.getTitle2(), "" + episode.getId());
-					StreamUrl streamUrl = episode.getStreamUrl(options.getQuality());
 					Path output = Paths.get(options.getDownloadFolder().get().toString(), episode.getTitle(), filename + PloozeConstants.EXTENSION);
 					if (!Files.exists(output) || options.shouldOverwrite()) {
 						if (!Files.isDirectory(output.getParent())) {
 							Files.createDirectories(output.getParent());
 						}
+						StreamUrl streamUrl = episode.getStreamUrl(options.getQuality());
 						System.out.println("Start downloading: " + output.toString() + ", resolution: " + streamUrl.getResolution());
 						FfmpegLauncher.DEFAULT.download(streamUrl.getUrl(), output, new FfmpegLauncher.Callback() {
 							@Override

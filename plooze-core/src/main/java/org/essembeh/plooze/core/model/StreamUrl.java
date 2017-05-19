@@ -2,6 +2,8 @@ package org.essembeh.plooze.core.model;
 
 import java.util.Comparator;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class StreamUrl implements Comparable<StreamUrl> {
 
 	private final String url;
@@ -31,4 +33,10 @@ public class StreamUrl implements Comparable<StreamUrl> {
 	public int compareTo(StreamUrl o) {
 		return Comparator.comparingInt(StreamUrl::getBandwidth).compare(this, o);
 	}
+
+	@Override
+	public String toString() {
+		return "StreamUrl [url=" + StringUtils.abbreviateMiddle(url, "...", 20) + ", bandwidth=" + bandwidth + ", resolution=" + resolution + "]";
+	}
+
 }
