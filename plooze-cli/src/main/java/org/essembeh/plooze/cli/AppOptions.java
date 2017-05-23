@@ -41,13 +41,13 @@ public class AppOptions {
 		OPTIONS.addOption(CRON, "cron", true, "Run every X hours");
 		OPTIONS.addOption(DOWNLOAD, "download", true, "Download episodes to output folder");
 		OPTIONS.addOption(QUALITY, "quality", true,
-				"Change the quality of downloaded stream. Values: " + StringUtils.join(Quality.values(), ", ").toLowerCase());
-		OPTIONS.addOption(CHANNEL, "channel", true, "Only search in a specifi channel. Values: " + StringUtils.join(Channel.values(), ", ").toLowerCase());
+				"Change the quality of downloaded files. Values: " + StringUtils.join(Quality.values(), ", ").toLowerCase());
+		OPTIONS.addOption(CHANNEL, "channel", true, "Only search in a specific channel. Values: " + StringUtils.join(Channel.values(), ", ").toLowerCase());
 		OPTIONS.addOption(JSON, "json", false, "Display json content while searching");
-		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite file if they already exist");
+		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite files if they already exist");
 		OPTIONS.addOption(FIELDS, "fields", true, "Match motif on given fields (defaults are \""
 				+ StringUtils.join(Arrays.asList(PloozeConstants.DEFAULT_FIELDS), PloozeConstants.FIELDS_SEPARATOR) + "\")");
-		OPTIONS.addOption(LIST_FIELDS, "list-fields", false, "Run every X hours");
+		OPTIONS.addOption(LIST_FIELDS, "list-fields", false, "List all available fields, see -f");
 
 	}
 
