@@ -48,10 +48,11 @@ public class PloozeTest {
 		}
 		Optional<Episode> selection = PLOOZE_DATABASE.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
-		StreamUrl stream = selection.get().getStreamUrl(Quality.LOWEST);
+		Optional<StreamUrl> stream = selection.get().getStreamUrl(Quality.LOWEST);
+		Assert.assertTrue(stream.isPresent());
 		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_FILENAME_FORMAT, selection.get());
 		Path output = Files.createTempFile("plooze", filename);
-		FfmpegLauncher.DEFAULT.download(stream.getUrl(), output, new FfmpegLauncher.Callback() {
+		FfmpegLauncher.DEFAULT.download(stream.get().getUrl(), output, new FfmpegLauncher.Callback() {
 			@Override
 			public void start(Path output) {
 				System.out.println("  > Start downloading: " + output.toString());

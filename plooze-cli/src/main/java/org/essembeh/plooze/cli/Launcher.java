@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Stream;
@@ -41,11 +42,10 @@ public class Launcher {
 						System.out.println("[DAEMON] " + SimpleDateFormat.getTimeInstance().format(new Date()) + ": Start processing");
 						try {
 							process(database, options);
-						} catch (IOException | InterruptedException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
-						System.out.println("[DAEMON] " + SimpleDateFormat.getTimeInstance().format(new Date()) + ": Next download in "
-								+ options.getCronDelay().get() + " hour(s)");
+						System.out.println("[DAEMON] " + SimpleDateFormat.getTimeInstance().format(new Date()) + ": Next download in " + options.getCronDelay().get() + " hour(s)");
 					}
 				}, 0, options.getCronDelay().get() * 3600000);
 			} else {
@@ -87,22 +87,26 @@ public class Launcher {
 						if (!Files.isDirectory(output.getParent())) {
 							Files.createDirectories(output.getParent());
 						}
-						StreamUrl streamUrl = episode.getStreamUrl(options.getQuality());
-						System.out.println("Start downloading: " + output.toString() + ", resolution: " + streamUrl.getResolution());
-						FfmpegLauncher.DEFAULT.download(streamUrl.getUrl(), output, new FfmpegLauncher.Callback() {
-							@Override
-							public void progress(String line) {
-								System.out.print("  " + line + "\r");
-							}
-
-							@Override
-							public void done(int rc) {
-								System.out.println("");
-								if (rc != 0) {
-									System.out.println("  exit value: " + rc);
+						Optional<StreamUrl> streamUrl = episode.getStreamUrl(options.getQuality());
+						if (streamUrl.isPresent()) {
+							System.out.println("Start downloading: " + output.toString() + ", resolution: " + streamUrl.get().getResolution());
+							FfmpegLauncher.DEFAULT.download(streamUrl.get().getUrl(), output, new FfmpegLauncher.Callback() {
+								@Override
+								public void progress(String line) {
+									System.out.print("  " + line + "\r");
 								}
-							}
-						});
+
+								@Override
+								public void done(int rc) {
+									System.out.println("");
+									if (rc != 0) {
+										System.out.println("  exit value: " + rc);
+									}
+								}
+							});
+						} else {
+							System.out.println("Cannot find stream for " + episode.getId());
+						}
 					} else {
 						if (options.isVerbose()) {
 							System.out.println("File already exists: " + output);
@@ -123,8 +127,7 @@ public class Launcher {
 						}
 						System.out.println("");
 					} else {
-						System.out.println(
-								String.format("[%s] %s: %s (%d min)", episode.getId(), episode.getTitle(), episode.getTitle2(), episode.getDuration()));
+						System.out.println(String.format("[%s] %s: %s (%d min)", episode.getId(), episode.getTitle(), episode.getTitle2(), episode.getDuration()));
 					}
 				}
 			}

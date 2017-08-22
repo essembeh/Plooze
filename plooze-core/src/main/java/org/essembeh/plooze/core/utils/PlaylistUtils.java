@@ -44,7 +44,7 @@ public class PlaylistUtils {
 		return Optional.empty();
 	}
 
-	public static StreamUrl getStream(RemoteResource playlist, Quality quality) throws MalformedURLException, IOException {
+	public static Optional<StreamUrl> getStream(RemoteResource playlist, Quality quality) throws MalformedURLException, IOException {
 		List<String> lines = playlist.readLines();
 		SortedSet<StreamUrl> streams = new TreeSet<>();
 		for (int i = 0; i < lines.size() - 1; i++) {
@@ -58,15 +58,14 @@ public class PlaylistUtils {
 			}
 		}
 		if (streams.isEmpty()) {
-			throw new IllegalStateException("Cannot find stream");
+			return Optional.empty();
 		}
 		if (quality == Quality.BEST) {
-			return streams.last();
+			return Optional.of(streams.last());
 		}
 		if (quality == Quality.LOWEST) {
-			return streams.first();
+			return Optional.of(streams.first());
 		}
-		return streams.stream().filter(s -> PloozeConstants.MEDIUM_RESOLUTION.equals(s.getResolution())).findFirst()
-				.orElseThrow(() -> new IllegalStateException("Cannot find stream with resolution: " + PloozeConstants.MEDIUM_RESOLUTION));
+		return streams.stream().filter(s -> PloozeConstants.MEDIUM_RESOLUTION.equals(s.getResolution())).findFirst();
 	}
 }

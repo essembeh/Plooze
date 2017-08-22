@@ -3,6 +3,7 @@ package org.essembeh.plooze.core.model;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.essembeh.plooze.core.utils.PlaylistUtils;
 import org.essembeh.plooze.core.utils.PloozeConstants;
@@ -84,7 +85,7 @@ public class Episode {
 		throw new IllegalStateException("Cannot find stream url for " + getId());
 	}
 
-	public StreamUrl getStreamUrl(Quality quality) throws IOException {
+	public Optional<StreamUrl> getStreamUrl(Quality quality) throws IOException {
 		return PlaylistUtils.getStream(new RemoteResource(getPlaylistUrl()), quality);
 	}
 
