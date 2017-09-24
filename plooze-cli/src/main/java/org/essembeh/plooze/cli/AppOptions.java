@@ -30,6 +30,8 @@ public class AppOptions {
 	public static final String OVERWRITE = "o";
 	public static final String QUALITY = "q";
 	public static final String VERBOSE = "v";
+	public static final String DURATION_MIN = "min";
+	public static final String DURATION_MAX = "max";
 
 	public static final String CRON = "C";
 	public static final String LIST_FIELDS = "F";
@@ -40,14 +42,15 @@ public class AppOptions {
 		OPTIONS.addOption(VERBOSE, "verbose", false, "Display more information");
 		OPTIONS.addOption(CRON, "cron", true, "Run every X hours");
 		OPTIONS.addOption(DOWNLOAD, "download", true, "Download episodes to output folder");
-		OPTIONS.addOption(QUALITY, "quality", true,
-				"Change the quality of downloaded files. Values: " + StringUtils.join(Quality.values(), ", ").toLowerCase());
+		OPTIONS.addOption(QUALITY, "quality", true, "Change the quality of downloaded files. Values: " + StringUtils.join(Quality.values(), ", ").toLowerCase());
 		OPTIONS.addOption(CHANNEL, "channel", true, "Only search in a specific channel. Values: " + StringUtils.join(Channel.values(), ", ").toLowerCase());
 		OPTIONS.addOption(JSON, "json", false, "Display json content while searching");
 		OPTIONS.addOption(OVERWRITE, "overwrite", false, "Overwrite files if they already exist");
-		OPTIONS.addOption(FIELDS, "fields", true, "Match motif on given fields (defaults are \""
-				+ StringUtils.join(Arrays.asList(PloozeConstants.DEFAULT_FIELDS), PloozeConstants.FIELDS_SEPARATOR) + "\")");
+		OPTIONS.addOption(FIELDS, "fields", true,
+				"Match motif on given fields (defaults are \"" + StringUtils.join(Arrays.asList(PloozeConstants.DEFAULT_FIELDS), PloozeConstants.FIELDS_SEPARATOR) + "\")");
 		OPTIONS.addOption(LIST_FIELDS, "list-fields", false, "List all available fields, see -f");
+		OPTIONS.addOption(DURATION_MIN, "duration-min", true, "Filter elements with duration > given arg (in minutes)");
+		OPTIONS.addOption(DURATION_MAX, "duration-max", true, "Filter elements with duration < given arg (in minutes)");
 
 	}
 
@@ -123,5 +126,19 @@ public class AppOptions {
 			return new Channel[] { Channel.valueOf(commandLine.getOptionValue(CHANNEL).toUpperCase()) };
 		}
 		return Channel.values();
+	}
+
+	public Optional<Integer> getDurationMin() {
+		if (commandLine.hasOption(DURATION_MIN)) {
+			return Optional.of(Integer.parseInt(commandLine.getOptionValue(DURATION_MIN)));
+		}
+		return Optional.empty();
+	}
+
+	public Optional<Integer> getDurationMax() {
+		if (commandLine.hasOption(DURATION_MAX)) {
+			return Optional.of(Integer.parseInt(commandLine.getOptionValue(DURATION_MAX)));
+		}
+		return Optional.empty();
 	}
 }

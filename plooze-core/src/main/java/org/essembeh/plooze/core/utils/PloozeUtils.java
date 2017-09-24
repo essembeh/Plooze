@@ -48,4 +48,8 @@ public class PloozeUtils {
 		}
 		return false;
 	}
+	
+	public static String sanitize(String in) {
+		return in.replace('/', '_');
+	}
 }

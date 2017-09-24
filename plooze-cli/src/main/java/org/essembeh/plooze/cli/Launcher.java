@@ -5,13 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.ParseException;
@@ -20,8 +20,10 @@ import org.essembeh.plooze.core.model.Channel;
 import org.essembeh.plooze.core.model.Episode;
 import org.essembeh.plooze.core.model.PloozeDatabase;
 import org.essembeh.plooze.core.model.StreamUrl;
+import org.essembeh.plooze.core.utils.EpisodeFilter;
 import org.essembeh.plooze.core.utils.FfmpegLauncher;
 import org.essembeh.plooze.core.utils.PloozeConstants;
+import org.essembeh.plooze.core.utils.PloozeUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -76,13 +78,15 @@ public class Launcher {
 			if (options.isVerbose()) {
 				System.out.println("Search: '" + arg + "'");
 			}
-			List<Episode> result = database.search(arg, options.getFields().orElse(PloozeConstants.DEFAULT_FIELDS));
-			Collections.sort(result, Comparator.comparingInt(Episode::getId).reversed());
+			EpisodeFilter filter = new EpisodeFilter(options.getFields().orElse(PloozeConstants.DEFAULT_FIELDS), arg);
+			options.getDurationMax().ifPresent(filter::setDurationMax);
+			options.getDurationMin().ifPresent(filter::setDurationMin);
+			List<Episode> result = database.stream().filter(filter::test).sorted(Comparator.comparingInt(Episode::getId).reversed()).collect(Collectors.toList());
 			for (Episode episode : result) {
 				if (options.getDownloadFolder().isPresent()) {
 					// DOWNLOAD MODE
-					String filename = StringUtils.defaultIfBlank(episode.getTitle2(), "" + episode.getId());
-					Path output = Paths.get(options.getDownloadFolder().get().toString(), episode.getTitle(), filename + PloozeConstants.EXTENSION);
+					String filename = PloozeUtils.sanitize(StringUtils.defaultIfBlank(episode.getTitle2(), "" + episode.getId()));
+					Path output = Paths.get(options.getDownloadFolder().get().toString(), PloozeUtils.sanitize(episode.getTitle()), filename + PloozeConstants.EXTENSION);
 					if (!Files.exists(output) || options.shouldOverwrite()) {
 						if (!Files.isDirectory(output.getParent())) {
 							Files.createDirectories(output.getParent());

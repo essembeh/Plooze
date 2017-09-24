@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.zip.ZipException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.essembeh.plooze.core.utils.PloozeUtils;
 
 public class PloozeDatabase {
@@ -25,19 +25,6 @@ public class PloozeDatabase {
 		}
 	}
 
-	public List<Episode> search(String arg, String[] fields) {
-		List<Episode> out = new ArrayList<>();
-		for (Episode episode : episodes) {
-			for (String field : fields) {
-				if (StringUtils.containsIgnoreCase(episode.getProperty(field), arg)) {
-					out.add(episode);
-					break;
-				}
-			}
-		}
-		return out;
-	}
-
 	public String[] getFields() {
 		if (episodes.isEmpty()) {
 			return null;
@@ -47,5 +34,9 @@ public class PloozeDatabase {
 
 	public Optional<Episode> findById(int id) {
 		return getEpisodes().stream().filter(ep -> ep.getId() == id).findFirst();
+	}
+
+	public Stream<Episode> stream() {
+		return episodes.stream();
 	}
 }
