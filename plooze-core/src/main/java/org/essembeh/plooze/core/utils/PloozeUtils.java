@@ -36,7 +36,7 @@ public class PloozeUtils {
 	}
 
 	public static String resolve(String format, Episode in) {
-		StrSubstitutor substitutor = new StrSubstitutor(new JsonStrLookup(in.getJson()), "${", "}", '\\');
+		StrSubstitutor substitutor = new StrSubstitutor(new JsonStrLookup(in.getJson()), "@{", "}", '\\');
 		return substitutor.replace(format);
 	}
 

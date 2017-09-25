@@ -15,9 +15,7 @@ import com.google.gson.JsonObject;
 public class Episode {
 
 	public enum Quality {
-		BEST,
-		MEDIUM,
-		LOWEST
+		BEST, MEDIUM, LOWEST
 	}
 
 	private final JsonObject json;
@@ -28,23 +26,23 @@ public class Episode {
 	}
 
 	public int getId() {
-		return Integer.parseInt(getProperty("id_diffusion"));
+		return Integer.parseInt(getProperty(PloozeConstants.JsonFields.ID_DIFFUSION));
 	}
 
 	public String getTitle() {
-		return getProperty("titre");
+		return getProperty(PloozeConstants.JsonFields.TITRE);
 	}
 
 	public String getTitle2() {
-		return getProperty("soustitre");
+		return getProperty(PloozeConstants.JsonFields.SOUSTITRE);
 	}
 
 	public String getDescription() {
-		return getProperty("accroche");
+		return getProperty(PloozeConstants.JsonFields.ACCROCHE);
 	}
 
 	public int getDuration() {
-		return Integer.parseInt(getProperty("duree"));
+		return Integer.parseInt(getProperty(PloozeConstants.JsonFields.DUREE));
 	}
 
 	@Override
@@ -61,19 +59,19 @@ public class Episode {
 	}
 
 	public String getGenre() {
-		return getProperty("format") + " / " + getProperty("genre_simplifie");
+		return getProperty(PloozeConstants.JsonFields.FORMAT) + " / " + getProperty(PloozeConstants.JsonFields.GENRE_SIMPLIFIE);
 	}
 
 	public String getChannel() {
-		return getProperty("chaine_label");
+		return getProperty(PloozeConstants.JsonFields.CHAINE_LABEL);
 	}
 
 	public String getPlaylistUrl() throws IOException {
 		JsonElement details = PloozeUtils.getJson(String.format(PloozeConstants.DETAILS_URL__id, getId()));
 		Map<String, String> urls = new HashMap<>();
-		for (JsonElement video : details.getAsJsonObject().get("videos").getAsJsonArray()) {
-			String format = video.getAsJsonObject().get("format").getAsString();
-			String url = video.getAsJsonObject().get("url").getAsString();
+		for (JsonElement video : details.getAsJsonObject().get(PloozeConstants.JsonFields.VIDEOS).getAsJsonArray()) {
+			String format = video.getAsJsonObject().get(PloozeConstants.JsonFields.FORMAT).getAsString();
+			String url = video.getAsJsonObject().get(PloozeConstants.JsonFields.URL).getAsString();
 			urls.put(format, url);
 		}
 		if (urls.containsKey("hls_v5_os")) {

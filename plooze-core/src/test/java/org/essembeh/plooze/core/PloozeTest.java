@@ -27,7 +27,7 @@ public class PloozeTest {
 
 	@BeforeClass
 	public static void init() throws IOException {
-		PLOOZE_DATABASE.refresh(Channel.FRANCE2);
+		PLOOZE_DATABASE.refresh(Channel.FRANCE5);
 		Assert.assertFalse(PLOOZE_DATABASE.getEpisodes().isEmpty());
 	}
 
@@ -50,8 +50,8 @@ public class PloozeTest {
 		Assert.assertTrue(selection.isPresent());
 		Optional<StreamUrl> stream = selection.get().getStreamUrl(Quality.LOWEST);
 		Assert.assertTrue(stream.isPresent());
-		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_FILENAME_FORMAT, selection.get());
-		Path output = Files.createTempFile("plooze", filename);
+		String filename = PloozeUtils.resolve(PloozeConstants.DEFAULT_OUTPUT_FORMAT, selection.get());
+		Path output = Files.createTempFile("plooze", PloozeUtils.sanitize(filename));
 		FfmpegLauncher.DEFAULT.download(stream.get().getUrl(), output, new FfmpegLauncher.Callback() {
 			@Override
 			public void start(Path output) {

@@ -85,8 +85,8 @@ public class Launcher {
 			for (Episode episode : result) {
 				if (options.getDownloadFolder().isPresent()) {
 					// DOWNLOAD MODE
-					String filename = PloozeUtils.sanitize(StringUtils.defaultIfBlank(episode.getTitle2(), "" + episode.getId()));
-					Path output = Paths.get(options.getDownloadFolder().get().toString(), PloozeUtils.sanitize(episode.getTitle()), filename + PloozeConstants.EXTENSION);
+					String filename = PloozeUtils.resolve(options.getOutputPathFormat(), episode);
+					Path output = Paths.get(options.getDownloadFolder().get().toString(), filename);
 					if (!Files.exists(output) || options.shouldOverwrite()) {
 						if (!Files.isDirectory(output.getParent())) {
 							Files.createDirectories(output.getParent());
