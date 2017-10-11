@@ -105,13 +105,13 @@ public class Launcher {
 		if (options.dumpJson()) {
 			System.out.println(JSON_PP.toJson(episode.getJson()));
 		} else if (options.isVerbose()) {
-			System.out.println("Title     : " + episode.getTitle() + " / " + episode.getTitle2());
-			System.out.println("Genre     : " + episode.getGenre());
-			System.out.println("Duration  : " + episode.getDuration() + " min");
-			System.out.println("Channel   : " + episode.getChannel());
-			System.out.println("ID        : " + episode.getId());
+			System.out.println("Title       : " + episode.getTitle() + " / " + episode.getTitle2());
+			System.out.println("Genre       : " + episode.getGenre());
+			System.out.println("Duration    : " + episode.getDuration() + " min");
+			System.out.println("Channel     : " + episode.getChannel());
+			System.out.println("ID          : " + episode.getId());
 			if (StringUtils.isNotBlank(episode.getDescription())) {
-				System.out.println("Desciption: " + episode.getDescription());
+				System.out.println("Description : " + episode.getDescription());
 			}
 			System.out.println("");
 		} else {
