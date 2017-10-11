@@ -75,11 +75,15 @@ public class Launcher {
 			EpisodeFilter filter = new EpisodeFilter(options.getFields().orElse(PloozeConstants.DEFAULT_FIELDS));
 			options.getDurationMax().ifPresent(filter::setDurationMax);
 			options.getDurationMin().ifPresent(filter::setDurationMin);
-			for (String keyword : options.getKeywords()) {
-				if (options.isVerbose()) {
-					System.out.println("Search: '" + keyword + "'");
+			if (options.getKeywords().isEmpty()) {
+				processFilter(database, filter, options);
+			} else {
+				for (String keyword : options.getKeywords()) {
+					if (options.isVerbose()) {
+						System.out.println("Search: '" + keyword + "'");
+					}
+					processFilter(database, filter.setMotif(keyword), options);
 				}
-				processFilter(database, filter.setMotif(keyword), options);
 			}
 		}
 	}
