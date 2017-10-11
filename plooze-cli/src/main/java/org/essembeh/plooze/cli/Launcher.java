@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +30,7 @@ import com.google.gson.GsonBuilder;
 public class Launcher {
 
 	private static final Gson JSON_PP = new GsonBuilder().setPrettyPrinting().create();
+	private static final int VALUE_MAX_LEN = 32;
 
 	public static void main(String[] args) throws ParseException, IOException, InterruptedException {
 		AppOptions options = AppOptions.parse(args);
@@ -62,79 +62,104 @@ public class Launcher {
 		Channel[] channels = options.getChannels();
 		System.out.println("Refresh content for: " + StringUtils.join(channels, ", ").toLowerCase());
 		database.refresh(channels);
-		if (options.listFields()) {
-			String[] fields = database.getFields();
-			if (fields == null) {
-				System.out.println("Cannot retrieve fields list, you have to refresh the database first");
-			} else {
-				System.out.println("Available fields:");
-				Stream.of(fields).sorted().map(s -> "  " + s).forEach(System.out::println);
-			}
-		}
 		if (options.isVerbose()) {
 			System.out.println("Database loaded with " + database.getEpisodes().size() + " episodes");
 		}
-		for (String arg : options.getArgs()) {
-			if (options.isVerbose()) {
-				System.out.println("Search: '" + arg + "'");
-			}
-			EpisodeFilter filter = new EpisodeFilter(options.getFields().orElse(PloozeConstants.DEFAULT_FIELDS), arg);
+		if (options.listFields()) {
+			listFieldKeys(database);
+		}
+		if (options.listFieldValues()) {
+			// List Field values mode
+			listFieldValues(database, options.getFields().orElse(PloozeConstants.DEFAULT_FIELDS));
+		} else {
+			EpisodeFilter filter = new EpisodeFilter(options.getFields().orElse(PloozeConstants.DEFAULT_FIELDS));
 			options.getDurationMax().ifPresent(filter::setDurationMax);
 			options.getDurationMin().ifPresent(filter::setDurationMin);
-			List<Episode> result = database.stream().filter(filter::test).sorted(Comparator.comparingInt(Episode::getId).reversed()).collect(Collectors.toList());
-			for (Episode episode : result) {
-				if (options.getDownloadFolder().isPresent()) {
-					// DOWNLOAD MODE
-					String filename = PloozeUtils.resolve(options.getOutputPathFormat(), episode);
-					Path output = Paths.get(options.getDownloadFolder().get().toString(), filename);
-					if (!Files.exists(output) || options.shouldOverwrite()) {
-						if (!Files.isDirectory(output.getParent())) {
-							Files.createDirectories(output.getParent());
-						}
-						Optional<StreamUrl> streamUrl = episode.getStreamUrl(options.getQuality());
-						if (streamUrl.isPresent()) {
-							System.out.println("Start downloading: " + output.toString() + ", resolution: " + streamUrl.get().getResolution());
-							FfmpegLauncher.DEFAULT.download(streamUrl.get().getUrl(), output, new FfmpegLauncher.Callback() {
-								@Override
-								public void progress(String line) {
-									System.out.print("  " + line + "\r");
-								}
-
-								@Override
-								public void done(int rc) {
-									System.out.println("");
-									if (rc != 0) {
-										System.out.println("  exit value: " + rc);
-									}
-								}
-							});
-						} else {
-							System.out.println("Cannot find stream for " + episode.getId());
-						}
-					} else {
-						if (options.isVerbose()) {
-							System.out.println("File already exists: " + output);
-						}
-					}
-				} else {
-					// DISPLAY MODE
-					if (options.dumpJson()) {
-						System.out.println(JSON_PP.toJson(episode.getJson()));
-					} else if (options.isVerbose()) {
-						System.out.println("Title     : " + episode.getTitle() + " / " + episode.getTitle2());
-						System.out.println("Genre     : " + episode.getGenre());
-						System.out.println("Duration  : " + episode.getDuration() + " min");
-						System.out.println("Channel   : " + episode.getChannel());
-						System.out.println("ID        : " + episode.getId());
-						if (StringUtils.isNotBlank(episode.getDescription())) {
-							System.out.println("Desciption: " + episode.getDescription());
-						}
-						System.out.println("");
-					} else {
-						System.out.println(String.format("[%s] %s: %s (%d min)", episode.getId(), episode.getTitle(), episode.getTitle2(), episode.getDuration()));
-					}
+			for (String keyword : options.getKeywords()) {
+				if (options.isVerbose()) {
+					System.out.println("Search: '" + keyword + "'");
 				}
+				processFilter(database, filter.setMotif(keyword), options);
 			}
+		}
+	}
+
+	private static void listFieldKeys(PloozeDatabase database) {
+		System.out.println("Available fields:");
+		System.out.println(StringUtils.join(database.getFields(), ", "));
+	}
+
+	private static void processFilter(PloozeDatabase database, EpisodeFilter filter, AppOptions options) throws IOException, InterruptedException {
+		List<Episode> result = database.stream().filter(filter::test).sorted(Comparator.comparingInt(Episode::getId).reversed()).collect(Collectors.toList());
+		for (Episode episode : result) {
+			if (options.getDownloadFolder().isPresent()) {
+				downloadEpisode(episode, options);
+			} else {
+				displayEpisode(episode, options);
+			}
+		}
+	}
+
+	private static void displayEpisode(Episode episode, AppOptions options) {
+		// DISPLAY MODE
+		if (options.dumpJson()) {
+			System.out.println(JSON_PP.toJson(episode.getJson()));
+		} else if (options.isVerbose()) {
+			System.out.println("Title     : " + episode.getTitle() + " / " + episode.getTitle2());
+			System.out.println("Genre     : " + episode.getGenre());
+			System.out.println("Duration  : " + episode.getDuration() + " min");
+			System.out.println("Channel   : " + episode.getChannel());
+			System.out.println("ID        : " + episode.getId());
+			if (StringUtils.isNotBlank(episode.getDescription())) {
+				System.out.println("Desciption: " + episode.getDescription());
+			}
+			System.out.println("");
+		} else {
+			System.out.println(String.format("[%s] %s: %s (%d min)", episode.getId(), episode.getTitle(), episode.getTitle2(), episode.getDuration()));
+		}
+	}
+
+	private static void downloadEpisode(Episode episode, AppOptions options) throws IOException, InterruptedException {
+		// Download Mode
+		String filename = PloozeUtils.resolve(options.getOutputPathFormat(), episode);
+		Path output = Paths.get(options.getDownloadFolder().get().toString(), filename);
+		if (!Files.exists(output) || options.shouldOverwrite()) {
+			if (!Files.isDirectory(output.getParent())) {
+				Files.createDirectories(output.getParent());
+			}
+			Optional<StreamUrl> streamUrl = episode.getStreamUrl(options.getQuality());
+			if (streamUrl.isPresent()) {
+				System.out.println("Start downloading: " + output.toString() + ", resolution: " + streamUrl.get().getResolution());
+				FfmpegLauncher.DEFAULT.download(streamUrl.get().getUrl(), output, new FfmpegLauncher.Callback() {
+					@Override
+					public void progress(String line) {
+						System.out.print("  " + line + "\r");
+					}
+
+					@Override
+					public void done(int rc) {
+						System.out.println("");
+						if (rc != 0) {
+							System.out.println("  exit value: " + rc);
+						}
+					}
+				});
+			} else {
+				System.out.println("Cannot find stream for " + episode.getId());
+			}
+		} else {
+			if (options.isVerbose()) {
+				System.out.println("File already exists: " + output);
+			}
+		}
+	}
+
+	private static void listFieldValues(PloozeDatabase database, String[] fields) {
+		for (String field : fields) {
+			System.out.println("Values for field: " + field);
+			database.stream().map(e -> e.getProperty(field)).map(StringUtils::trim).filter(StringUtils::isNotBlank).map(s -> StringUtils.abbreviate(s, VALUE_MAX_LEN)).sorted().distinct()
+					.map(s -> "  * " + s).forEach(System.out::println);
+			System.out.println();
 		}
 	}
 }

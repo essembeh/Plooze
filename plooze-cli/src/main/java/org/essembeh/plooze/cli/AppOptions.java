@@ -35,6 +35,7 @@ public class AppOptions {
 	public static final String OUTPUT_FORMAT = "O";
 	public static final String CRON = "C";
 	public static final String LIST_FIELDS = "F";
+	public static final String LIST_VALUES = "V";
 
 	private static final Options OPTIONS = new Options();
 	static {
@@ -49,6 +50,7 @@ public class AppOptions {
 		OPTIONS.addOption(FIELDS, "fields", true,
 				"Match motif on given fields (defaults are \"" + StringUtils.join(Arrays.asList(PloozeConstants.DEFAULT_FIELDS), PloozeConstants.FIELDS_SEPARATOR) + "\")");
 		OPTIONS.addOption(LIST_FIELDS, "list-fields", false, "List all available fields, see -f");
+		OPTIONS.addOption(LIST_VALUES, "list-values", false, "List all available values for fields given with -" + FIELDS);
 		OPTIONS.addOption(DURATION_MIN, "duration-min", true, "Filter elements with duration > given arg (in minutes)");
 		OPTIONS.addOption(DURATION_MAX, "duration-max", true, "Filter elements with duration < given arg (in minutes)");
 		OPTIONS.addOption(OUTPUT_FORMAT, "output", true, "Output path format (default: " + PloozeConstants.DEFAULT_OUTPUT_FORMAT);
@@ -83,7 +85,7 @@ public class AppOptions {
 		formatter.printHelp("plooze", OPTIONS);
 	}
 
-	public List<String> getArgs() {
+	public List<String> getKeywords() {
 		return commandLine.getArgList();
 	}
 
@@ -142,11 +144,15 @@ public class AppOptions {
 		}
 		return Optional.empty();
 	}
-	
+
 	public String getOutputPathFormat() {
 		if (commandLine.hasOption(OUTPUT_FORMAT)) {
 			return commandLine.getOptionValue(OUTPUT_FORMAT);
 		}
 		return PloozeConstants.DEFAULT_OUTPUT_FORMAT;
+	}
+
+	public boolean listFieldValues() {
+		return commandLine.hasOption(LIST_VALUES);
 	}
 }

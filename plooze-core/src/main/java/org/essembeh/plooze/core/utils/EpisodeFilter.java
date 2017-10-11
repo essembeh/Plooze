@@ -14,9 +14,8 @@ public class EpisodeFilter implements Predicate<Episode> {
 	private Optional<Integer> durationMin = Optional.empty();
 	private Optional<Integer> durationMax = Optional.empty();
 
-	public EpisodeFilter(String[] fields, String motif) {
+	public EpisodeFilter(String[] fields) {
 		this.fields = fields;
-		this.motif = motif;
 	}
 
 	@Override
@@ -35,11 +34,18 @@ public class EpisodeFilter implements Predicate<Episode> {
 		return true;
 	}
 
-	public void setDurationMax(int durationMax) {
-		this.durationMax = Optional.of(durationMax);
+	public EpisodeFilter setMotif(String motif) {
+		this.motif = motif;
+		return this;
 	}
 
-	public void setDurationMin(int durationMin) {
+	public EpisodeFilter setDurationMax(int durationMax) {
+		this.durationMax = Optional.of(durationMax);
+		return this;
+	}
+
+	public EpisodeFilter setDurationMin(int durationMin) {
 		this.durationMin = Optional.of(durationMin);
+		return this;
 	}
 }

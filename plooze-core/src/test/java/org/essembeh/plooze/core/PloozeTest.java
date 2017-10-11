@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,9 +42,10 @@ public class PloozeTest {
 
 	@Test
 	public void testDownload() throws Exception {
-		Assert.assertTrue(PLOOZE_DATABASE.getFields().length > PloozeConstants.DEFAULT_FIELDS.length);
+		List<String> fields = PLOOZE_DATABASE.getFields();
+		Assert.assertTrue(fields.size() > PloozeConstants.DEFAULT_FIELDS.length);
 		for (String f : PloozeConstants.DEFAULT_FIELDS) {
-			Assert.assertTrue(Arrays.asList(PLOOZE_DATABASE.getFields()).contains(f));
+			Assert.assertTrue(fields.contains(f));
 		}
 		Optional<Episode> selection = PLOOZE_DATABASE.getEpisodes().stream().collect(Collectors.minBy(Comparator.comparingInt(Episode::getDuration)));
 		Assert.assertTrue(selection.isPresent());
