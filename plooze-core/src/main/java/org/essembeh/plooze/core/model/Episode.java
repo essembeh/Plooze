@@ -51,7 +51,7 @@ public class Episode {
 	}
 
 	public String getProperty(String key) {
-		return json.has(key) ? json.get(key).getAsString() : "";
+		return json.has(key) ? json.get(key).getAsString().trim() : "";
 	}
 
 	public JsonObject getJson() {
